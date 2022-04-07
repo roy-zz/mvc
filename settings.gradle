@@ -1,0 +1,3 @@
+rootProject.name = 'mvc'
+include 'base'
+include 'servlet'

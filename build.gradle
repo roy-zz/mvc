@@ -1,0 +1,32 @@
+plugins {
+	id 'org.springframework.boot' version '2.6.6'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+}
+
+apply plugin: 'java-library'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+group = 'com.roy.mvc'
+version = '0.0.1-SNAPSHOT'
+
+allprojects {
+	sourceCompatibility = 11.0
+
+	apply plugin: 'java-library'
+	apply plugin: 'org.springframework.boot'
+	apply plugin: 'io.spring.dependency-management'
+
+	group 'com.roy.mvc'
+	version '1.0.0-SNAPSHOT'
+
+	repositories {
+		mavenLocal()
+		mavenCentral()
+	}
+
+	jar {
+		enabled = false
+	}
+
+}
