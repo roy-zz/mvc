@@ -194,7 +194,82 @@ request.getLocalPort(): 8080
 
 ---
 
+### HTTP 요청 데이터
 
+클라이언트에서 서버로 데이터를 전달하는 방법은 크게 세가지가 있다.
+
+#### 쿼리 파라미터(GET)
+
+/path?username=roy&age=20과 같이 바디에는 데이터가 없고 URL의 쿼리 파라미터에 데이터를 포함해서 전달한다.
+데이터를 조회하는 조건을 전달할 때 많이 사용한다.
+
+username=roy, age=20을 서버로 전달하는 예를 알아본다.
+
+```java
+@WebServlet(name = "requestParamServlet", urlPatterns = "/request-param")
+public class RequestParamServlet extends HttpServlet {
+
+    @Override
+    protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        System.out.println("[모든 파라미터 조회 - START]");
+        request.getParameterNames().asIterator()
+                        .forEachRemaining(name -> System.out.printf("%s: %s%n", name, request.getParameter(name)));
+        System.out.println("[모든 파라미터 조회 - END]");
+        System.out.println();
+
+        System.out.println("[파라미터 이름으로 조회]");
+        String username = request.getParameter("username");
+        System.out.printf("request.getParameter(username): %s%n", username);
+        String age = request.getParameter("age");
+        System.out.printf("request.getParameter(age): %s%n", age);
+        System.out.println();
+
+        System.out.println("[Key가 중복되는 파라미터 조회]");
+        System.out.println("request.getParameterValues(username)");
+        String[] usernames = request.getParameterValues("username");
+        Arrays.stream(usernames).forEach(name -> {
+            System.out.println("name = " + name);
+        });
+
+        response.getWriter().write("ok");
+    }
+}
+```
+
+출력된 결과는 아래와 같다.
+
+```bash
+[모든 파라미터 조회 - START]
+username: roy
+age: 20
+[모든 파라미터 조회 - END]
+
+[파라미터 이름으로 조회]
+request.getParameter(username): roy
+request.getParameter(age): 20
+
+[Key가 중복되는 파라미터 조회]
+request.getParameterValues(username)
+name = roy
+name = perry
+```
+
+---
+
+#### HTML Form(POST)
+
+content-type: application/x-www-form-urlencoded와 같이 사용되며 메시지 바디에 쿼리 파라미터 형식으로 데이터를 전달한다.
+회원가입, 상품 주문등에 주로 사용된다.
+
+
+
+
+---
+
+#### Message Body(POST, PUT, PATCH)
+
+HTTP 메시지 바디에 데이터를 직접 담아서 요청한다.
+HTTP API에서 주로 사용되며 데이터 형식으로는 JSON이 많이 사용되며 XML과 TEXT도 사용된다.
 
 
 
