@@ -254,6 +254,9 @@ name = roy
 name = perry
 ```
 
+파라미터의 Key가 중복될 때 파라미터 이름으로 조회하면 처음으로 검색된 값을 반환한다.
+Key가 중복되는 경우(물론 Key가 중복되면 Collection 타입으로 변경해야겠지만) getParameterValues로 조회해야한다. 
+
 ---
 
 #### HTML Form(POST)
@@ -261,8 +264,26 @@ name = perry
 content-type: application/x-www-form-urlencoded와 같이 사용되며 메시지 바디에 쿼리 파라미터 형식으로 데이터를 전달한다.
 회원가입, 상품 주문등에 주로 사용된다.
 
+src/main/webapp/basic/hello-form.html을 아래와 같이 생성한다.
 
+```html
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Test</title>
+</head>
+<body>
+<form action="/request-param" method="post">
+    username: <input type="text" name="username" /> age: <input type="text" name="age" /> <button type="submit">전송</button>
+</form>
+</body>
+</html>
+```
 
+GET URL 쿼리 파라미터 형식은 클라이언트에서 서버로 데이터를 전달할 때 HTTP 메시지 바디를 사용하지 않기 때문에 content-type이 없다.
+HTML Form 형식의 경우 HTTP 메시지 바디에 데이터가 들어가기 때문에 어떤 형식인지 content-type을 지정해야한다.
+Form 데이터를 전송하는 형식을 application/x-www-form-urlencoded라고 한다.
 
 ---
 
@@ -271,14 +292,56 @@ content-type: application/x-www-form-urlencoded와 같이 사용되며 메시지
 HTTP 메시지 바디에 데이터를 직접 담아서 요청한다.
 HTTP API에서 주로 사용되며 데이터 형식으로는 JSON이 많이 사용되며 XML과 TEXT도 사용된다.
 
+**API 메시지 바디에 단순 텍스트 전송**
 
+```java
+@WebServlet(name = "requestBodyTextServlet", urlPatterns = "/request-body-text")
+public class RequestBodyTextServlet extends HttpServlet {
 
+    @Override
+    protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        ServletInputStream inputStream = request.getInputStream();
+        String body = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
+        System.out.println("body = " + body);
+        response.getWriter().write("OK");
+    }
+}
+```
 
+inputStream은 byte 코드를 반환한다. byte 코드를 String으로 변경하려면 문자표인 Charset을 지정해주어야한다.
 
+---
 
+**API 메시지 바디에 JSON 데이터 전송**
 
+```java
+@WebServlet(name = "requestBodyJsonServlet", urlPatterns = "/request-body-json")
+public class RequestBodyJsonServlet extends HttpServlet {
 
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
+    @Override
+    protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        ServletInputStream inputStream = request.getInputStream();
+        String body = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
+        System.out.println("body = " + body);
+        DefaultData defaultData = objectMapper.readValue(body, DefaultData.class);
+        System.out.println("defaultData. = " + defaultData.getUsername());
+        System.out.println("defaultData.getAge() = " + defaultData.getAge());
+        response.getWriter().write("OK");
+    }
+
+    @Getter
+    static class DefaultData {
+        private String username;
+        private int age;
+    }
+}
+```
+
+JSON 형식의 데이터를 담을 클래스인 DefaultData 클래스를 내부 클래스로 만들었다.
+새로운 클래스 파일로 생성해도 동일하게 작동한다.
+JSON 결과를 파싱하는 라이브러리는 SpringMVC에서 기본으로 제공하는 Jackson 라이브러리를 사용하였다.
 
 ---
 
