@@ -1,7 +1,6 @@
 package com.roy.mvc.servlet.web.response;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.roy.mvc.servlet.web.request.RequestBodyJsonServlet;
 import lombok.Getter;
 import lombok.Setter;
 

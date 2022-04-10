@@ -1,4 +1,4 @@
-package com.roy.mvc.servlet.web;
+package com.roy.mvc.servlet.web.defaults;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
