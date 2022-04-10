@@ -1,8 +1,5 @@
-package com.roy.mvc.servlet.web;
+package com.roy.mvc.servlet.web.request;
 
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.Getter;
 import org.springframework.util.StreamUtils;
 
 import javax.servlet.ServletException;
@@ -14,25 +11,15 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
-@WebServlet(name = "requestBodyJsonServlet", urlPatterns = "/request-body-json")
-public class RequestBodyJsonServlet extends HttpServlet {
-
-    private final ObjectMapper objectMapper = new ObjectMapper();
+@WebServlet(name = "requestBodyTextServlet", urlPatterns = "/request-body-text")
+public class RequestBodyTextServlet extends HttpServlet {
 
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         ServletInputStream inputStream = request.getInputStream();
         String body = StreamUtils.copyToString(inputStream, StandardCharsets.UTF_8);
         System.out.println("body = " + body);
-        DefaultData defaultData = objectMapper.readValue(body, DefaultData.class);
-        System.out.println("defaultData. = " + defaultData.getUsername());
-        System.out.println("defaultData.getAge() = " + defaultData.getAge());
         response.getWriter().write("OK");
     }
 
-    @Getter
-    static class DefaultData {
-        private String username;
-        private int age;
-    }
 }

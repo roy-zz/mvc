@@ -1,4 +1,4 @@
-package com.roy.mvc.servlet.web;
+package com.roy.mvc.servlet.web.request;
 
 import lombok.extern.slf4j.Slf4j;
 
