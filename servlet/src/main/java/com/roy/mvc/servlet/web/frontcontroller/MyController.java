@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public interface MyController {
 
@@ -22,14 +23,35 @@ public interface MyController {
     default void saveMemberAndSetAttribute(HttpServletRequest request) {
         String username = request.getParameter("username");
         int age = Integer.parseInt(request.getParameter("age"));
-        Member member = new Member(username, age);
-        memberRepository.save(member);
-        request.setAttribute("member", member);
+        request.setAttribute("member", saveMember(username, age));
     }
 
     default void getMembersAndSetAttribute(HttpServletRequest request) {
-        List<Member> storedMembers = memberRepository.findAll();
-        request.setAttribute("members", storedMembers);
+        request.setAttribute("members", getMembers());
+    }
+
+    default ModelView saveMemberAndSetViewModel(Map<String, String> params, String viewName) {
+        String username = params.get("username");
+        int age = Integer.parseInt(params.get("age"));
+        ModelView modelView = new ModelView(viewName);
+        modelView.getMapOfModel().put("member", saveMember(username, age));
+        return modelView;
+    }
+
+    default ModelView getMembersAndSetViewModel(String viewModel) {
+        ModelView modelView = new ModelView(viewModel);
+        modelView.getMapOfModel().put("members", getMembers());
+        return modelView;
+    }
+
+    private Member saveMember(String username, int age) {
+        Member member = new Member(username, age);
+        memberRepository.save(member);
+        return member;
+    }
+
+    private List<Member> getMembers() {
+        return memberRepository.findAll();
     }
 
 }
