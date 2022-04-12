@@ -44,13 +44,13 @@ public interface MyController {
         return modelView;
     }
 
-    private Member saveMember(String username, int age) {
+    default Member saveMember(String username, int age) {
         Member member = new Member(username, age);
         memberRepository.save(member);
         return member;
     }
 
-    private List<Member> getMembers() {
+    default List<Member> getMembers() {
         return memberRepository.findAll();
     }
 
