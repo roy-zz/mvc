@@ -1,3 +1,4 @@
 rootProject.name = 'mvc'
-include 'base'
-include 'servlet'
+include("base")
+include("servlet")
+include("spring-mvc")
