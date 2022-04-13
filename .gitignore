@@ -1,6 +1,7 @@
 HELP.md
 .gitlab-ci.yml
 .gradle
+.gradle/*
 build/
 src/main/generated/
 src/main/resources/uploads
