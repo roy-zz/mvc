@@ -163,6 +163,173 @@ public class BasicRequestController {
 
 ---
 
+### 파라미터 필수 여부 
+
+아래의 이미지와 같이 @RequestParam 애노테이션의 required 속성으로 파라미터 필수 여부를 지정할 수 있다.
+기본 값은 true이기 때문에 클라이언트가 선택적으로 입력할 수 있는 경우에만 false로 변경하면 된다.
+
+```java
+@Slf4j
+@RestController
+@RequestMapping(value = "/basic-request")
+public class BasicRequestController {
+    @ResponseBody
+    @RequestMapping(value = "/request-param-required")
+    public String requestParamRequired(
+        @RequestParam(required = true) String username,
+        @RequestParam(required = false) Integer age
+    ) {
+        log.info("username: {}, age: {}", username, age);
+        return "OK";
+    }
+}
+```
+
+**주의!**
+
+문자열의 경우 required = true는 Null만 걸러낸다. Empty와 같이 "" 빈 문자열은 걸러주지 못한다.
+자료형을 int와 같은 primitive로 지정하고 required = false로 설정하면 primitive 타입에 null을 대입하여 오류가 발생한다.
+이러한 경우 Wrapper 클래스인 Integer로 변경하거나 아래와 같이 defaultValue 속성을 사용해야 한다. 
+(defaultValue가 있는 경우 required 속성은 의미가 없다.)
+
+```java
+@Slf4j
+@Controller
+@RequestMapping(value = "/basic-request")
+public class BasicRequestController {
+    @ResponseBody
+    @RequestMapping(value = "/request-param-required")
+    public String requestParamRequired(
+        @RequestParam(required = true, defaultValue = "Roy") String username,
+        @RequestParam(required = false, defaultValue = "0") Integer age
+    ) {
+        log.info("username: {}, age: {}", username, age);
+        return "OK";
+    }
+}
+```
+
+---
+
+### 파라미터 Map으로 조회
+
+파라미터를 일일히 지정하여 받는 것이 아니라 Map형태로 받을 수 있다.
+
+중복되는 Key가 없다는 확신이 있다면 아래와 같이 중복 Key가 허용되지 않는 Map을 사용한다.
+
+```java
+@Slf4j
+@Controller
+@RequestMapping(value = "/basic-request")
+public class BasicRequestController {
+    @ResponseBody
+    @RequestMapping(value = "/not-duplicated-param-map")
+    public String notDuplicatedParamMap(@RequestParam Map<String, Object> params) {
+        log.info("username: {}, age: {}", params.get("username"), params.get("age"));
+        return "OK";
+    }
+}
+```
+
+중복되는 Key가 있다면 아래와 같이 Key를 컬렉션 타입으로 반환하는 MultiValueMap을 사용해야한다.
+
+```java
+@Slf4j
+@Controller
+@RequestMapping(value = "/basic-request")
+public class BasicRequestController {
+    @ResponseBody
+    @RequestMapping(value = "/duplicated-param-map")
+    public String duplicatedParamMap(@RequestParam MultiValueMap<String, Object> params) {
+        log.info("username: {}, age: {}", params.get("username"), params.get("age"));
+        return "OK";
+    }
+}
+```
+
+---
+
+### @ModelAttribute
+
+```java
+@Data
+public class RequestDTO {
+    private String username;
+    private int age;
+    private LocalDateTime fromAt;
+    private LocalDateTime toAt;
+}
+```
+
+RequestDTO로 데이터를 검색한다고 했을 때
+파라미터로 값을 받아서 사용하면 필요한 객체를 생성하게 하면 컨트롤러는 아래와 같이 작성하게 될 것이다.
+
+```java
+@Slf4j
+@Controller
+@RequestMapping(value = "/basic-request")
+public class BasicRequestController {
+    @ResponseBody
+    @RequestMapping(value = "/not-use-model-attribute")
+    public String notUseModelAttribute(
+            @RequestParam("username") String username,
+            @RequestParam("age") int age,
+            @RequestParam("fromAt") LocalDateTime fromAt,
+            @RequestParam("toAt") LocalDateTime toAt
+    ) {
+        RequestDTO requestDTO = new RequestDTO();
+        requestDTO.setUsername(username);
+        requestDTO.setAge(age);
+        requestDTO.setFromAt(fromAt);
+        requestDTO.setToAt(toAt);
+        return "OK";
+    }
+}
+```
+
+RequestDTO를 사용하는 곳이면 모든 곳에서 이러한 방식으로 받게 될 것이며 DTO에 수정사항이 발생하면 모든 코드를 수정해야한다.
+개발자들의 이런 고민사항을 인지한 스프링에서 제공해주는 기능들이 있다. 하나씩 살펴보도록 한다.
+
+**Version 1.0**: @ModelAttribute 애노테이션을 사용하면 스프링에서 setter를 사용하여 값을 대입시켜준다.
+
+```java
+@Slf4j
+@Controller
+@RequestMapping(value = "/basic-request")
+public class BasicRequestController {
+    @ResponseBody
+    @RequestMapping(value = "/model-attribute", headers = "X-API-VERSION=1.0")
+    public String modelAttributeV1(@ModelAttribute RequestDTO requestDTO) {
+        log.info("username: {}, age: {}, fromAt: {}, toAt: {}",
+                requestDTO.getUsername(), requestDTO.getAge(), requestDTO.getFromAt(), requestDTO.getToAt());
+        return "OK";
+    }
+}
+```
+
+**Version 2.0**: Primitive, Wrapper 타입이 아니라면 @ModelAttribute 생략이 가능하다.
+스프링은 Primitive, Wrapper 타입이면 자동으로 @RequestParam가 붙어있다고 판단하고 나머지들 중 Argument Resolver로 지정되지 않은 타입은 @ModelAttribute가 붙어있다고 판단한다.
+
+```java
+@Slf4j
+@Controller
+@RequestMapping(value = "/basic-request")
+public class BasicRequestController {
+    @ResponseBody
+    @RequestMapping(value = "/model-attribute", headers = "X-API-VERSION=2.0")
+    public String modelAttributeV2(RequestDTO requestDTO) {
+        log.info("username: {}, age: {}, fromAt: {}, toAt: {}",
+                requestDTO.getUsername(), requestDTO.getAge(), requestDTO.getFromAt(), requestDTO.getToAt());
+        return "OK";
+    }
+}
+```
+
+---
+
+### 단순 텍스트
+
+
 
 
 

@@ -1,5 +1,6 @@
 package com.example.springmvc.controller;
 
+import com.example.springmvc.domain.RequestDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Controller;
@@ -9,7 +10,9 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Locale;
+import java.util.Map;
 
 @Slf4j
 @Controller
@@ -71,6 +74,62 @@ public class BasicRequestController {
     @RequestMapping(value = "/request-param", headers = "X-API-VERSION=4.0")
     public String requestParamV4(String username, int age) {
         log.info("username: {}, age: {}", username, age);
+        return "OK";
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "/request-param-required")
+    public String requestParamRequired(
+        @RequestParam(required = true, defaultValue = "Roy") String username,
+        @RequestParam(required = false, defaultValue = "0") Integer age
+    ) {
+        log.info("username: {}, age: {}", username, age);
+        return "OK";
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "/not-duplicated-param-map")
+    public String notDuplicatedParamMap(@RequestParam Map<String, Object> params) {
+        log.info("username: {}, age: {}", params.get("username"), params.get("age"));
+        return "OK";
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "/duplicated-param-map")
+    public String duplicatedParamMap(@RequestParam MultiValueMap<String, Object> params) {
+        log.info("username: {}, age: {}", params.get("username"), params.get("age"));
+        return "OK";
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "/not-use-model-attribute")
+    public String notUseModelAttribute(
+            @RequestParam("username") String username,
+            @RequestParam("age") int age,
+            @RequestParam("fromAt") LocalDateTime fromAt,
+            @RequestParam("toAt") LocalDateTime toAt
+    ) {
+        RequestDTO requestDTO = new RequestDTO();
+        requestDTO.setUsername(username);
+        requestDTO.setAge(age);
+        requestDTO.setFromAt(fromAt);
+        requestDTO.setToAt(toAt);
+        return "OK";
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "/model-attribute", headers = "X-API-VERSION=1.0")
+    public String modelAttributeV1(@ModelAttribute RequestDTO requestDTO) {
+        log.info("username: {}, age: {}, fromAt: {}, toAt: {}",
+                requestDTO.getUsername(), requestDTO.getAge(), requestDTO.getFromAt(), requestDTO.getToAt());
+        return "OK";
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "/model-attribute", headers = "X-API-VERSION=2.0")
+    public String modelAttributeV2(RequestDTO requestDTO) {
+        log.info("username: {}, age: {}, fromAt: {}, toAt: {}",
+                requestDTO.getUsername(), requestDTO.getAge(), requestDTO.getFromAt(), requestDTO.getToAt());
         return "OK";
     }
 
