@@ -329,10 +329,239 @@ public class BasicRequestController {
 
 ### 단순 텍스트
 
+HTTP message body에 데이터를 직접 담아서 요청하는 방식은 HTTP API에서 주로 사용된다.
+데이터 형식은 주로 JSON이 사용되며 XML과 TEXT도 사용된다.
+GET 메서드 뿐만 아니라 POST, PUT, PATCH도 사용할 수 있다.
+요청 파라미터와 다르게 message body를 통해서 데이터가 넘어오기 때문에 @RequestParam, @ModelAttribute를 사용할 수 없다.
 
+지금부터 message body의 데이터를 받는 방법에 대해서 알아본다.
 
+**Version1**
 
+HttpServletRequest의 ServletInputStream을 사용하여 데이터를 가져온다.
 
+```java
+@Slf4j
+@Controller
+@RequestMapping(value = "/basic-request")
+public class BasicRequestController {
+    @ResponseBody
+    @RequestMapping(value = "/request-body-string", headers = "X-API-VERSION=1.0")
+    public void requestBodyStringV1(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        ServletInputStream inputStream = request.getInputStream();
+        String messageBody = StreamUtils.copyToString(inputStream, UTF_8);
+        log.info("messageBody: {}", messageBody);
+        response.getWriter().write("OK");
+    }
+}
+```
+
+**Version2**
+
+InputStream, OutputStream을 사용하여 데이터를 가져온다.
+- InputStream(Reader): HTTP 요청 메시지 바디의 내용을 직접 조회한다.
+- OutputStream(Writer): HTTP 응답 메시지의 바디에 직접 결과를 출력한다.
+
+```java
+@Slf4j
+@Controller
+@RequestMapping(value = "/basic-request")
+public class BasicRequestController {
+    @ResponseBody
+    @RequestMapping(value = "/request-body-string", headers = "X-API-VERSION=2.0")
+    public void requestBodyStringV2(InputStream inputStream, Writer responseWriter) throws IOException {
+        String messageBody = StreamUtils.copyToString(inputStream, UTF_8);
+        log.info("messageBody: {}", messageBody);
+        responseWriter.write("OK");
+    }
+}
+```
+
+**Version3**
+
+HttpEntity를 사용하여 데이터를 가져온다. 
+HttpEntity는 HTTP header, body 정보를 편리하게 조회하는데 사용된다.
+HttpMessageConverter가 아닌 StringHttpMessageConverter를 사용한다.
+View를 조회하지 않고 바로 메시지 바디에 데이터를 넣어서 반환한다.
+
+HttpEntity를 상속받은 RequestEntity는 HttpMethod, URL등 추가 정보를 가지고 있다.
+ResponseEntity를 사용하는 경우 추가로 HTTP 상태 코드 설정이 가능하다.
+
+```java
+@Slf4j
+@Controller
+@RequestMapping(value = "/basic-request")
+public class BasicRequestController {
+    @ResponseBody
+    @RequestMapping(value = "/request-body-string", headers = "X-API-VERSION=3.0")
+    public HttpEntity<String> requestBodyStringV3(HttpEntity<String> httpEntity) {
+        String messageBody = httpEntity.getBody();
+        log.info("messageBody: {}", messageBody);
+        return new HttpEntity<>("OK");
+    }
+}
+```
+
+스프링 MVC 내부에서 HTTP message body를 읽어서 문자나 객체로 변환할 때 HttpMessageConverter가 사용된다.
+
+**Version4**
+
+@RequestBody를 사용하여 데이터를 가져온다.
+@RequestParam의 Body버전이라고 보면된다. HttpMessageConverter가 아닌 StringHttpMessageConverter가 적용도니다.
+하지만 헤더 정보나 URL 정보가 없기때문에 추가 정보가 필요하다면 HttpEntity나 하위 클래스의 객체를 사용해야 한다.
+
+```java
+@Slf4j
+@Controller
+@RequestMapping(value = "/basic-request")
+public class BasicRequestController {
+    @ResponseBody
+    @PostMapping(value = "/request-body-string", headers = "X-API-VERSION=4.0")
+    public String requestBodyStringV4(@RequestBody String messageBody) {
+        log.info("messageBody: {}", messageBody);
+        return "OK";
+    }
+}
+```
+
+---
+
+### JSON
+
+단순 텍스트가 아닌 JSON 데이터를 조회하는 방법에 대해서 알아본다.
+JSON 데이터를 만들 때 사용될 RequestDTO 클래스는 아래와 같다.
+
+```java
+@Data
+public class RequestDTO {
+    private String username;
+    private int age;
+    private LocalDateTime fromAt;
+    private LocalDateTime toAt;
+}
+```
+
+**Version1**
+
+서블릿에서 사용하던 방식과 유사하게 데이터를 가져온다.
+
+```java
+@Slf4j
+@Controller
+public class JsonRequestController {
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    @ResponseBody
+    @PostMapping(value = "/request-body-json", headers = "X-API-VERSION=1.0")
+    public void requestBodyJsonV1(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        ServletInputStream inputStream = request.getInputStream();
+        String messageBody = StreamUtils.copyToString(inputStream, UTF_8);
+        log.info("messageBody: {}", messageBody);
+        RequestDTO dto = objectMapper.readValue(messageBody, RequestDTO.class);
+        log.info("username: {}, age: {}, fromAt: {}, toAt: {}",
+                dto.getUsername(), dto.getAge(), dto.getFromAt(), dto.getToAt());
+        response.getWriter().write("OK");
+    }
+}
+```
+
+**Version2**
+
+@RequestBody 애노테이션을 사용하여 String으로 조회한다.
+조회된 데이터를 RequestDTO로 변환 후 조회한다.
+HttpMessageConverter 대신 StringHttpMessageConverter가 적용된다.
+
+```java
+@Slf4j
+@Controller
+public class JsonRequestController {
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    @ResponseBody
+    @PostMapping(value = "/request-body-json", headers = "X-API-VERSION=2.0")
+    public String requestBodyJsonV2(@RequestBody String messageBody) throws IOException {
+        RequestDTO dto = objectMapper.readValue(messageBody, RequestDTO.class);
+        log.info("username: {}, age: {}, fromAt: {}, toAt: {}",
+                dto.getUsername(), dto.getAge(), dto.getFromAt(), dto.getToAt());
+        return "OK";
+    }
+}
+
+```
+
+**Version3**
+
+@ModelAttribute에서 사용했던 것 처럼 @RequestBody를 사용하여 RequestDTO로 바로 조회한다.
+HttpEntity나 @RequestBody를 사용하면 HttpMessageConverter가 메시지 바디의 내용을 우리가 원하는 문자나 개체로 변환해준다.
+
+@ModelAttribute는 생략이 가능했지만 @RequestBody는 생략이 불가능하다.
+Primitive 타입이나 Wrapper 타입인 경우 애노테이션을 생략하면 @RequestParam이 적용된 것과 동일하게 작동한다.
+그 외에 ArgumentResolver로 지정한 타입이 아니라면 @ModelAttribute이 적용된 것과 동일하게 작동한다.
+만약 우리가 @RequestBody를 생략하게 되면 스프링은 메시지 바디가 아니라 쿼리 파라미터로 데이터가 올 것이라고 예상하고 작동하게 된다.
+
+주관적인 생각이지만 @ModelAttribute, @RequestParam, @RequestBody를 모두 생략하지 않고 사용하는 것이 혼란을 야기하지 않을 듯하다.
+
+```java
+@Slf4j
+@Controller
+public class JsonRequestController {
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    @ResponseBody
+    @PostMapping(value = "/request-body-json", headers = "X-API-VERSION=3.0")
+    public String requestBodyJsonV3(@RequestBody RequestDTO dto) {
+        log.info("username: {}, age: {}, fromAt: {}, toAt: {}",
+                dto.getUsername(), dto.getAge(), dto.getFromAt(), dto.getToAt());
+        return "OK";
+    }
+}
+```
+
+여기서 주의할 점은 HTTP 요청 시에 content-type을 application/json으로 지정해야한다.
+지정을 해야지 스프링에서 많은 메시지 컨버터 중 Json을 처리할 수 있는 메시지 컨버터를 실행시킨다.
+
+**Version4**
+
+단순 텍스트를 조회한 것과 동일하게 HttpEntity를 사용하여 조회가 가능하다.
+
+```java
+@Slf4j
+@Controller
+public class JsonRequestController {
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    @ResponseBody
+    @PostMapping(value = "/request-body-json", headers = "X-API-VERSION=4.0")
+    public String requestBodyJsonV4(@RequestBody HttpEntity<RequestDTO> httpEntity) {
+        RequestDTO dto = httpEntity.getBody();
+        log.info("username: {}, age: {}, fromAt: {}, toAt: {}",
+                dto.getUsername(), dto.getAge(), dto.getFromAt(), dto.getToAt());
+        return "OK";
+    }
+}
+```
+
+**Version5**
+
+요청 메시지 바디를 조회하는 것은 Version3와 동일하다.
+데이터를 반환하는 곳을 살펴보면 객체 자체를 반환하고 있다.
+이렇게 반환하더라도 메시지 컨버터가 작동하여 JSON으로 응답한다.
+
+```java
+@Slf4j
+@Controller
+public class JsonRequestController {
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    @ResponseBody
+    @PostMapping(value = "/request-body-json", headers = "X-API-VERSION=5.0")
+    public RequestDTO requestBodyJsonV5(@RequestBody RequestDTO dto) {
+        log.info("username: {}, age: {}, fromAt: {}, toAt: {}",
+                dto.getUsername(), dto.getAge(), dto.getFromAt(), dto.getToAt());
+        return dto;
+    }
+}
+```
+
+---
+
+지금까지 Http Request에 대해서 알아보았다.
+다음 장에서는 Http Response에 대해서 알아보도록 한다.
 
 ---
 

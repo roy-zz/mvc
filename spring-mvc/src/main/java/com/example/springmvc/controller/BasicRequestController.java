@@ -2,17 +2,24 @@ package com.example.springmvc.controller;
 
 import com.example.springmvc.domain.RequestDTO;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.MultiValueMap;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.ServletInputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.Writer;
 import java.time.LocalDateTime;
 import java.util.Locale;
 import java.util.Map;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Slf4j
 @Controller
@@ -130,6 +137,38 @@ public class BasicRequestController {
     public String modelAttributeV2(RequestDTO requestDTO) {
         log.info("username: {}, age: {}, fromAt: {}, toAt: {}",
                 requestDTO.getUsername(), requestDTO.getAge(), requestDTO.getFromAt(), requestDTO.getToAt());
+        return "OK";
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "/request-body-string", headers = "X-API-VERSION=1.0")
+    public void requestBodyStringV1(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        ServletInputStream inputStream = request.getInputStream();
+        String messageBody = StreamUtils.copyToString(inputStream, UTF_8);
+        log.info("messageBody: {}", messageBody);
+        response.getWriter().write("OK");
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "/request-body-string", headers = "X-API-VERSION=2.0")
+    public void requestBodyStringV2(InputStream inputStream, Writer responseWriter) throws IOException {
+        String messageBody = StreamUtils.copyToString(inputStream, UTF_8);
+        log.info("messageBody: {}", messageBody);
+        responseWriter.write("OK");
+    }
+
+    @ResponseBody
+    @RequestMapping(value = "/request-body-string", headers = "X-API-VERSION=3.0")
+    public HttpEntity<String> requestBodyStringV3(HttpEntity<String> httpEntity) {
+        String messageBody = httpEntity.getBody();
+        log.info("messageBody: {}", messageBody);
+        return new HttpEntity<>("OK");
+    }
+
+    @ResponseBody
+    @PostMapping(value = "/request-body-string", headers = "X-API-VERSION=4.0")
+    public String requestBodyStringV4(@RequestBody String messageBody) {
+        log.info("messageBody: {}", messageBody);
         return "OK";
     }
 
