@@ -74,7 +74,7 @@ yourVariable = [[${data}]]
 
 #### 예제
 
-**호출**
+**Controller**
 ```java
 @GetMapping("/text-basic")
 public String textBasic(Model model) {
@@ -94,7 +94,7 @@ public String textBasic(Model model) {
 <!--생략...-->
 ```
 
-**결과**
+**Result**
 
 ![](thymeleaf_image/text-result.png)
 
@@ -114,7 +114,7 @@ HTML 문서는 `<`, `>`와 같은 특수 문자를 기반으로 정의된다.
 
 #### 예제
 
-**호출**
+**Controller**
 ```java
 @GetMapping("/text-unescaped")
 public String textUnescaped(Model model) {
@@ -138,14 +138,151 @@ public String textUnescaped(Model model) {
 </ul>
 ```
 
-**결과**
+**Result**
 
 ![](thymeleaf_image/text-utext-result.png)
 
 ---
 
+### 변수 - SpringEL
 
+타임리프에서는 변수를 사용할 때 `변수 표현식`(${...})을 사용한다.
+`변수 표현식`에는 스프링 EL이라는 스프링이 제공하는 표현식을 사용할 수 있다.
 
+#### 예제
+
+**Controller**
+
+```java
+@GetMapping("/variable")
+public String variable(Model model) {
+    List<User> userList = List.of(
+            new User("userA", 10),
+            new User("userB", 20)
+    );
+    Map<String, User> userMap = new HashMap<>(
+            Map.of("userA", userList.get(0), "userB", userList.get(1))
+    );
+    model.addAttribute("user", userList.get(0));
+    model.addAttribute("users", userList);
+    model.addAttribute("userMap", userMap);
+    return "basic/variable";
+}
+@Data
+@AllArgsConstructor
+static class User {
+    private String username;
+    private int age;
+}
+```
+
+**variable.html**
+
+```html
+<h1>SpringEL 표현식</h1>
+<ul>Object
+    <!--user.username: user의 username을 프로퍼티 접근 -> user.getUsername()-->
+    <li>${user.username} = <span th:text="${user.username}"></span></li>
+    <li>${user['username']} = <span th:text="${user['username']}"></span></li>
+    <li>${user.getUsername()} = <span th:text="${user.getUsername()}"></span></li>
+</ul>
+<ul>List
+    <li>${users[0].username} = <span th:text="${users[0].username}"></span></li>
+    <li>${users[0]['username]} = <span th:text="${users[0]['username']}"></span></li>
+    <li>${users[0].getUsername()} = <span th:text="${users[0].getUsername()}"></span></li>
+</ul>
+<ul>Map
+    <li>${userMap['userA'].username} = <span th:text="${userMap['userA']}"></span></li>
+    <li>${userMap['userA']['username']} = <span th:text="${userMap['userA']['username']}"></span></li>
+    <li>${userMap['userA'].getUsername()} = <span th:text="${userMap['userA'].getUsername()}"></span></li>
+</ul>
+```
+
+**Result**
+
+![](thymeleaf_image/springel-result.png)
+
+---
+
+#### 지역 변수 사용법
+
+`th:with`를 사용하여 지역 변수를 선언해서 사용할 수 있으며 해당 태그 안에서만 사용할 수 있다.
+
+**variable.html**
+```html
+<h1>지역 변수 - (th:with)</h1>
+<div th:with="first=${users[0]}">
+    <p>0번 사용자의 이름은 <span th:text="${first.username}"></span></p>
+</div>
+```
+
+**Result**
+
+![](thymeleaf_image/local-variable-result.png)
+
+---
+
+### 기본 객체들
+
+타임리프는 아래와 같은 기본 객체들을 제공한다.
+
+- ${#request}
+- ${#response}
+- ${#session}
+- ${#servletContext}
+- ${#locale}
+
+`${#request}`의 경우 `HttpServletRequest` 객체를 그대로 제공하기 때문에 데이터를 조회하기 불편하다.
+이러한 문제를 해결하기 위해 편의 객체도 제공한다.
+
+- HTTP 요청 파라미터 접근: ${param}
+- HTTP 세션 접근: ${session}
+- 스프링 빈 접근: @{@royBean.roy('Roy')}
+
+#### 예제
+
+**Controller**
+```java
+@GetMapping("/basic-objects")
+public String basicObjects(HttpSession session) {
+    session.setAttribute("sessionData", "Hello Session");
+    return "basic/basic-objects";
+}
+
+@Component("royBean")
+static class RoyBean {
+    public String roy(String data) {
+        return String.format("Hello %s", data);
+    }
+}
+```
+
+**basic-objects.html**
+```html
+<h1>기본 객체 (Expression Basic Objects)</h1>
+<ul>
+    <li>request = <span th:text="${#request}"></span></li>
+    <li>response = <span th:text="${#response}"></span></li>
+    <li>session = <span th:text="${#session}"></span></li>
+    <li>servletContext = <span th:text="${#servletContext}"></span></li>
+    <li>locale = <span th:text="${#locale}"></span></li>
+</ul>
+
+<h1>편의 객체</h1>
+<ul>
+    <li>Request Parameter = <span th:text="${param.paramData}"></span></li>
+    <li>Session = <span th:text="${session.sessionData}"></span></li>
+    <li>Spring bean = <span th:text="${@royBean.roy('Roy!')}"></span></li>
+</ul>
+```
+
+**Result**
+
+![](thymeleaf_image/basic-objects-result.png)
+
+---
+
+### 
 
 
 
