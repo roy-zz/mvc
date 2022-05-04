@@ -275,6 +275,68 @@ public String comments(Model model) {
 
 ---
 
+### Block (블록)
+
+`<th:block>`은 HTML 태그가 아닌 타임리프의 유일한 자체 태그다.
+
+#### 예시
+
+**Controller**
+```java
+@GetMapping("/block")
+public String block(Model model) {
+    List<User> users = getUsers();
+    model.addAttribute("users", users);
+    return "basic/block";
+}
+```
+
+**block.html**
+```html
+<th:block th:each="user : ${users}">
+    <div>
+        사용자 이름 <span th:text="${user.username}"></span>
+        사용자 나이 <span th:text="${user.age}"></span>
+    </div>
+    <div>
+        요약 <span th:text="${user.username} + ' / ' + ${user.age}"></span>
+    </div>
+</th:block>
+```
+
+**Result**
+```html
+    <div>
+        사용자 이름 <span>userA</span>
+        사용자 나이 <span>10</span>
+    </div>
+    <div>
+        요약 <span>userA / 10</span>
+    </div>
+
+    <div>
+        사용자 이름 <span>userB</span>
+        사용자 나이 <span>20</span>
+    </div>
+    <div>
+        요약 <span>userB / 20</span>
+    </div>
+
+    <div>
+        사용자 이름 <span>userC</span>
+        사용자 나이 <span>30</span>
+    </div>
+    <div>
+        요약 <span>userC / 30</span>
+    </div>
+```
+
+타임리프의 특성상 HTML 태그 안에 속성으로 기능을 정의해서 사용한다.
+하지만 위의 예제처럼 for 한 번에 두 개의 `div`태그를 써야하는 경우 `<th:block>`을 사용하면 된다.
+타임리프에 의해 렌더링될 때 `<th:block>`은 제거된다.
+
+---
+
 
 
 

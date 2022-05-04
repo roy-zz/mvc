@@ -124,4 +124,11 @@ public class BasicController {
         return "basic/comments";
     }
 
+    @GetMapping("/block")
+    public String block(Model model) {
+        List<User> users = getUsers();
+        model.addAttribute("users", users);
+        return "basic/block";
+    }
+
 }
