@@ -282,7 +282,71 @@ static class RoyBean {
 
 ---
 
-### 
+### 유틸리티 객체와 날짜
+
+타임리프는 아래와 같이 문자, 숫자, 날짜, URI등을 편리하게 다루는 유틸리티 객체를 제공한다.
+
+- `#message`: 메시지, 국제화 처리
+- `#uris`: URI 이스케이프 지원
+- `#dates`: `java.util.Date`서식 지원
+- `#calendars`: `java.util.Calendar`서식 지원
+- `#temporals`: 자바8 날짜 서식 지원
+- `#numbers`: 숫자 서식 지원
+- `#strings`: 문자 관련 편의 기능
+- `#objects`: 객체 관련 기능 제공
+- `#bools`: boolean 관련 기능 제공
+- `#arrays`: 배열 관련 기능 제공
+- `#lists #sets, #maps`: 컬렉션 관련 기능 제공
+- `#ids`: 아이디 처리 관련 기능 제공
+
+**참고 자료**
+- [타임리프 유틸리티 객체](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#expression-utility-objects)
+- [타임리프 유틸리티 객체 예시](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html#appendix-b-expression-utility-objects)
+
+#### 예제
+
+**Controller**
+
+```java
+@GetMapping("/date")
+public String date(Model model) {
+    model.addAttribute("localDateTime", LocalDateTime.now());
+    return "basic/date";
+}
+```
+
+**date.html**
+
+```html
+<h1>LocalDateTime</h1>
+<ul>
+    <li>default = <span th:text="${localDateTime}"></span></li>
+    <li>yyyy-MM-dd HH:mm:ss = <span th:text="${#temporals.format(localDateTime, 'yyyy-MM-dd HH:mm:ss')}"></span></li>
+</ul>
+
+<h1>LocalDateTime - Utils</h1>
+<ul>
+    <li>${#temporals.day(localDateTime)} = <span th:text="${#temporals.day(localDateTime)}"></span></li>
+    <li>${#temporals.month(localDateTime)} = <span th:text="${#temporals.month(localDateTime)}"></span></li>
+    <li>${#temporals.monthName(localDateTime)} = <span th:text="${#temporals.monthName(localDateTime)}"></span></li>
+    <li>${#temporals.monthNameShort(localDateTime)} = <span th:text="${#temporals.monthNameShort(localDateTime)}"></span></li>
+    <li>${#temporals.year(localDateTime)} = <span th:text="${#temporals.year(localDateTime)}"></span></li>
+    <li>${#temporals.dayOfWeek(localDateTime)} = <span th:text="${#temporals.dayOfWeek(localDateTime)}"></span></li>
+    <li>${#temporals.dayOfWeekName(localDateTime)} = <span th:text="${#temporals.dayOfWeekName(localDateTime)}"></span></li>
+    <li>${#temporals.dayOfWeekNameShort(localDateTime)} = <span th:text="${#temporals.dayOfWeekNameShort(localDateTime)}"></span></li>
+    <li>${#temporals.hour(localDateTime)} = <span th:text="${#temporals.hour(localDateTime)}"></span></li>
+    <li>${#temporals.minute(localDateTime)} = <span th:text="${#temporals.minute(localDateTime)}"></span></li>
+    <li>${#temporals.second(localDateTime)} = <span th:text="${#temporals.second(localDateTime)}"></span></li>
+    <li>${#temporals.nanosecond(localDateTime)} = <span th:text="${#temporals.nanosecond(localDateTime)}"></span></li>
+</ul>
+```
+
+**Result**
+
+![](thymeleaf_image/date-result.png)
+
+---
+
 
 
 
