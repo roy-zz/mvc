@@ -211,6 +211,82 @@ switch
 
 ---
 
+### Comment
+
+1. 표준 HTML 주석: 자바스크립트의 표준 HTML 주석은 타임리프가 렌더링 하지 않고 그대로 남겨둔다.
+2. 타임리프 파서 주석: 타임리프 파서 주석은 타임리프의 주석으로 렌더링에서 주석 부분을 제거한다.
+3. 타임리프 프로토타입 주석: HTML 주석에 `/*/`가 추가된 형태로 HTML 파일을 웹 브라우저에서 그대로 열어보면 HTML 주석이기 때문에 웹 브라우저가 렌더링 하지 않는다.
+`타임리프 렌더링`을 거치면 정상적으로 렌더링 된다. 즉, HTML 파일을 그대로 열어보면 주석 처리가 되지만, 타임리프를 렌더링 한 경우에만 보이는 기능이다.
+
+#### 예시
+
+**Controller**
+```java
+@GetMapping("/comments")
+public String comments(Model model) {
+    model.addAttribute("data", "Spring!");
+    return "basic/comments";
+}
+```
+
+**comments.html**
+```html
+<h1>예시</h1>
+<span th:text="${data}">html data</span>
+
+<h1>1. 표준 HTML 주석</h1>
+<!--
+<span th:text="${data}">html data</span>
+-->
+
+<h1>2. 타임리프 파서 주석</h1>
+<!--/* [[${data}]] */-->
+
+<!--/*-->
+<span th:text="${data}">html data</span>
+<!--*/-->
+
+<h1>3. 타임리프 프로토타입 주석</h1>
+<!--/*/
+<span th:text="${data}">html data</span>
+/*/-->
+```
+
+**Result**
+
+```html
+<h1>예시</h1>
+<span>Spring!</span>
+
+<h1>1. 표준 HTML 주석</h1>
+<!--
+<span th:text="${data}">html data</span>
+-->
+
+<h1>2. 타임리프 파서 주석</h1>
+
+
+
+
+<h1>3. 타임리프 프로토타입 주석</h1>
+
+<span>Spring!</span>
+```
+
+---
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
