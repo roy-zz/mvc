@@ -99,12 +99,23 @@ public class BasicController {
 
     @GetMapping("/each")
     public String each(Model model) {
-        List<User> users = List.of(
+        List<User> users = getUsers();
+        model.addAttribute("users", users);
+        return "basic/each";
+    }
+
+    @GetMapping("/condition")
+    public String condition(Model model) {
+        List<User> users = getUsers();
+        model.addAttribute("users", users);
+        return "basic/condition";
+    }
+
+    private List<User> getUsers() {
+        return List.of(
                 new User("userA", 10),
                 new User("userB", 20),
                 new User("userC", 30));
-        model.addAttribute("users", users);
-        return "basic/each";
     }
 
 }
