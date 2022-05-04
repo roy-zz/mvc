@@ -1,4 +1,4 @@
-이번 장에서는 `타임리프`의 기본 기능들에 대해서 알아본다.
+이번 장에서는 `타임리프`의 `텍스트`와 `표준 표현식 구문`에 대해서 알아본다.
 글의 하단부에 참고한 강의와 공식문서의 경로를 첨부하였으므로 자세한 내용은 강의나 공식문서에서 확인한다.
 모든 코드는 [깃 허브(링크)](https://github.com/roy-zz/mvc) 에 올려두었다.
 
@@ -96,7 +96,7 @@ public String textBasic(Model model) {
 
 **Result**
 
-![](thymeleaf_image/text-result.png)
+![](text_expression_image/text-result.png)
 
 ---
 
@@ -140,7 +140,7 @@ public String textUnescaped(Model model) {
 
 **Result**
 
-![](thymeleaf_image/text-utext-result.png)
+![](text_expression_image/text-utext-result.png)
 
 ---
 
@@ -200,7 +200,7 @@ static class User {
 
 **Result**
 
-![](thymeleaf_image/springel-result.png)
+![](text_expression_image/springel-result.png)
 
 ---
 
@@ -218,7 +218,7 @@ static class User {
 
 **Result**
 
-![](thymeleaf_image/local-variable-result.png)
+![](text_expression_image/local-variable-result.png)
 
 ---
 
@@ -278,7 +278,7 @@ static class RoyBean {
 
 **Result**
 
-![](thymeleaf_image/basic-objects-result.png)
+![](text_expression_image/basic-objects-result.png)
 
 ---
 
@@ -343,7 +343,7 @@ public String date(Model model) {
 
 **Result**
 
-![](thymeleaf_image/date-result.png)
+![](text_expression_image/date-result.png)
 
 ---
 
@@ -379,14 +379,130 @@ public String link(Model model) {
 
 **Result**
 
-![](thymeleaf_image/link-result.png)
+![](text_expression_image/link-result.png)
 
 ---
 
+### 리터럴 (Literals)
 
+리터럴은 소스 코드상에서 고정된 값을 의마한다.
+아래의 코드에서 리터럴은 총 5개가 있다.
 
+```java
+String charLiteral = "Hello";
+int numLiteral = 10 * 20;
+boolean boolLiteral = true;
+String nullLiteral = null;
+```
 
+- 문자: "Hello"
+- 숫자: 10, 20
+- 불린: true
+- null: null
 
+**주의 사항**
+타임리프에서 문자 리터럴은 항상 공백이 있는 문자 리터럴은 `'`로 감싸야한다.
+만약 감싸지 않은 문자 리터럴에 공백이 있는 경우 오류가 발생한다.
+
+#### 예제
+
+**Controller**
+```java
+@GetMapping("/literal")
+public String literal(Model model) {
+    model.addAttribute("data", "Spring!");
+    return "basic/literal";
+}
+```
+
+**literal.html**
+```html
+<h1>리터럴</h1>
+<ul>
+        <!-- 문자 리터럴에 공백이 있어서 오류가 발생하는 코드 -->
+        <!-- <li>"hello world!" = <span th:text="hello world!"></span></li> -->
+        <li>'hello' + ' world!' = <span th:text="'hello' + ' world'"></span></li>
+        <li>'hello world!' = <span th:text="'hello world!'"></span></li>
+        <li>'hello ' + ${data} = <span th:text="'hello ' + ${data}"></span></li>
+        <!-- 리터럴 대체(Literal substitutions)를 사용하면 마치 템플릿을 사용하는 것 처럼 편리하다. -->
+        <li>리터럴 대체 |hello ${data}| = <span th:text="|hello ${data}|"></span></li>
+</ul>
+```
+
+**Result**
+
+![](text_expression_image/literal-result.png)
+
+---
+
+### 연산
+
+타임리프의 연산은 자바와 크게 다르지 않으며 HTML 엔티티를 사용하는 부분만 주의하면 된다.
+
+- 비교연산: >(gt), <(lt), >=(ge), <=(le), !(not), ==(eq), !=(neq, ne)
+- 조건식: 자바의 조건식과 유사
+- Elvis 연산자`(?:)`: 조건식의 편의 버전
+- No-Operation: `_`인 경우 마치 타임리프가 실행되지 않는 것 처럼 동작한다.
+
+#### 예제
+
+**Controller**
+```java
+@GetMapping("/operation")
+public String operation(Model model) {
+    model.addAttribute("nullData", null);
+    model.addAttribute("data", "Spring!");
+    return "basic/operation";
+}
+```
+
+**operation.html**
+```html
+<ul>
+    <li>산술 연산
+        <ul>
+            <li>10 + 2 = <span th:text="10 + 2"></span></li>
+            <li>10 % 2 == 0 = <span th:text="10 % 2 == 0"></span></li>
+        </ul>
+    </li>
+    <li>비교 연산
+        <ul>
+            <li>1 > 10 = <span th:text="1 &gt; 10"></span></li>
+            <li>1 gt 10 = <span th:text="1 gt 10"></span></li>
+            <li>1 >= 10 = <span th:text="1 >= 10"></span></li>
+            <li>1 ge 10 = <span th:text="1 ge 10"></span></li>
+            <li>1 == 1 = <span th:text="1 == 10"></span></li>
+            <li>1 != 1 = <span th:text="1 != 10"></span></li>
+        </ul>
+    </li>
+    <li>조건식
+        <ul>
+            <li>(10 % 2 == 0)? '짝수' : '홀수' = <span th:text="(10 % 2 == 0)? '짝수':'홀수'"></span></li>
+        </ul>
+    </li>
+    <li>Elvis 연산자
+        <ul>
+            <li>${data}?: '데이터가 없습니다.' = <span th:text="${data}?: '데이터가 없습니다.'"></span></li>
+            <li>${nullData}?: '데이터가 없습니다.' = <span th:text="${nullData}?: '데이터가 없습니다.'"></span></li>
+        </ul>
+    </li>
+    <li>No-Operation
+        <ul>
+            <li>${data}?: _ = <span th:text="${data}?: _">데이터가 없습니다.</span></li>
+            <li>${nullData}?: _ = <span th:text="${nullData}?: _">데이터가 없습니다.</span></li>
+        </ul>
+    </li>
+</ul>
+```
+
+**Result**
+
+![](text_expression_image/operation-result.png)
+
+---
+
+지금까지 타임리프의 `텍스트`와 `표준 표현식 구문`에 대해서 알아보았다.
+다음 장에서는 이외의 기능들에 대해서 알아본다.
 
 ---
 
