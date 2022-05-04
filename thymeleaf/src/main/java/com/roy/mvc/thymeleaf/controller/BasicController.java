@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@SuppressWarnings("SpringMVCViewInspection")
+@SuppressWarnings({"SpringMVCViewInspection", "rawtypes"})
 @Controller
 @RequestMapping("/basic")
 public class BasicController {
@@ -95,6 +95,16 @@ public class BasicController {
     @GetMapping("/attribute")
     public String attribute() {
         return "basic/attribute";
+    }
+
+    @GetMapping("/each")
+    public String each(Model model) {
+        List<User> users = List.of(
+                new User("userA", 10),
+                new User("userB", 20),
+                new User("userC", 30));
+        model.addAttribute("users", users);
+        return "basic/each";
     }
 
 }
