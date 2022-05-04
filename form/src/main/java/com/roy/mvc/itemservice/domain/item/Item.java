@@ -1,24 +1,22 @@
 package com.roy.mvc.itemservice.domain.item;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.util.Collections;
 import java.util.List;
 
 @Data
+@NoArgsConstructor
 public class Item {
-
     private Long id;
     private String itemName;
     private Integer price;
     private Integer quantity;
-
-    private Boolean open; //판매 여부
-    private List<String> regions; //등록 지역
-    private ItemType itemType; //상품 종류
-    private String deliveryCode; //배송 방식
-
-    public Item() {
-    }
+    private Boolean open;
+    private List<String> regions = Collections.emptyList();
+    private ItemType itemType;
+    private String deliveryCode;
 
     public Item(String itemName, Integer price, Integer quantity) {
         this.itemName = itemName;
