@@ -337,22 +337,127 @@ public String block(Model model) {
 
 ---
 
+### Javascript Inline
 
+타임리프는 자바스크립트에서 타임리프를 편리하게 사용할 수 있는 `자바스크립트 인라인` 기능을 제공한다.
+자바스크립트 인라인 기능은 아래와 같이 적용한다.
 
+`<script th:inline="javascript">`
 
+#### 예시
 
+**Controller**
+```java
+@GetMapping("/javascript")
+public String javascript(Model model) {
+    model.addAttribute("user", new User("userA", 10));
+    List<User> users = getUsers();
+    model.addAttribute("users", users);
+    return "basic/javascript";
+}
+```
 
+**javascript.html**
+```html
+<!-- 자바스크립트 인라인 사용 전 -->
+<script>
+    const username = [[${user.username}]];
+    const age = [[${user.age}]];
+    // 자바스크립트 내추럴 템플릿
+    const username2 = /*[[${user.username}]]*/ "test username";
+    // 객체
+    const user = [[${user}]];
+</script>
 
+<!-- 자바스크립트 인라인 사용 후 -->
+<script th:inline="javascript">
+    const username = [[${user.username}]];
+    const age = [[${user.age}]];
+    // 자바스크립트 내추럴 템플릿
+    const username2 = /*[[${user.username}]]*/ "test username";
+    // 객체
+    const user = [[${user}]];
+</script>
 
+<!-- 자바스크립트 인라인 each -->
+<script th:inline="javascript">
+    [# th:each="user, stat : ${users}"]
+    const user[[${stat.count}]] = [[${user}]]
+    [/]
+</script>
+```
 
+**Result**
+```html
+<!-- 자바스크립트 인라인 사용 전 -->
+<script>
+    const username = userA;
+    const age = 10;
+    // 자바스크립트 내추럴 템플릿
+    const username2 = /*userA*/ "test username";
+    // 객체
+    const user = BasicController.User(username=userA, age=10);
+</script>
 
+<!-- 자바스크립트 인라인 사용 후 -->
+<script>
+    const username = "userA";
+    const age = 10;
+    // 자바스크립트 내추럴 템플릿
+    const username2 = "userA";
+    // 객체
+    const user = {"username":"userA","age":10};
+</script>
 
+<!-- 자바스크립트 인라인 each -->
+<script>
+    const user1 = {"username":"userA","age":10}
+    const user2 = {"username":"userB","age":20}
+    const user3 = {"username":"userC","age":30}
+</script>
+```
 
+인라인을 위하여 HTML 코드를 작성할 때 오류 표시가 나는 것은 IntelliJ의 오류이므로 무시해도 좋다.
 
+#### 참고
 
+**텍스트 렌더링**
+`var username = [[${user.username}]];`
+- 인라인 사용 전: `var username = userA`
+- 인라인 사용 후: `var username = "userA"`
 
+인라인을 사용하지 않으면 `userA`라는 변수 이름이 그대로 남아있다. 
+타임리프는 코드에 있는 그대로 렌더링을 한 것이지만 우리는 "userA"라는 문자가 나오는 결과를 예상하였다.
+결과적으로 userA가 변수명으로 사용되어 자바스크립트 오류가 발생하였다.
+age의 경우에는 `"`가 필요 없기 때문에 자바스크립트 오류 없이 정상 렌더링되었다.
 
+인라인 사용 후 렌더링 결과를 보면 문자 타입인 경우 `"`를 포함해줘야한다.
+추가로 자바스크립트에서 문제가 될 수 있는 문자가 포함되어 있으면 이스케이프 처리해준다.
 
+**자바스크립트 내추럴 템플릿**
+타임리프는 HTML 파일을 직접 열어도 동작하는 태추럴 템플릿 기능을 제공한다.
+자바스크립트 인라인 기능을 사용하면 주석을 활용해서 이 기능을 사용할 수 있다.
+
+`var username2 = /*[[${user.username}]]*/ "test username";`
+- 인라인 사용 전: `var username2 = /*userA*/ "test username";`
+- 인라인 사용 후: `var username2 = "userA";`
+
+인라인 사용 전 결과를 보면 순수하게 있는 그대로 해석했다. 
+이로 인해 내추럴 템플릿 기능이 동작하지 않고 렌더링 내용이 주석처리 되어 버린다.
+인라인 사용 후 결과를 보면 주석 부분이 제거되고, 기대한 "userA"가 정확하게 적용된다.
+
+**객체**
+타임리프의 자바스크립트 인라인 기능을 사용하면 객체를 `JSON`으로 자동 변환해준다.
+
+`var user = [[${user}]]`;
+- 인라인 사용 전: `var user = BasicController.User(username=userA, age=10);`
+- 인라인 사용 후: `var user = {"username": "userA", "age": 10};`
+
+인라인 사용 전은 객체의 `toString()`이 호출된 값이며 인라인 사용 후는 객체를 `JSON`으로 변환된 값이다.
+
+---
+
+지금까지 타임리프의 기타 기능들에 대해서 알아보았다.
 
 ---
 
