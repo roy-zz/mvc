@@ -35,6 +35,10 @@
             <label for="quantity" th:text="#{label.item.quantity}">수량</label>
             <input type="text" id="quantity" th:field="*{quantity}" class="form-control">
         </div>
+        <div>
+            <label for="parameter" th:text="#{name.full(${item.itemName})}">파라미터 테스트</label>
+            <input type="text" id="parameter" th:field="*{quantity}" class="form-control">
+        </div>
 
         <hr class="my-4">
 
