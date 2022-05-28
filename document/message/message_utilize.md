@@ -115,6 +115,52 @@ public interface LocaleResolver {
 }
 ```
 
+### 오류 코드 메시지 관리 전략
+
+`MessageCodesResolver`는 `required.item.itemName`과 같이 구체적인 코드를 우선으로 생성하고, `required`와 같이 덜 구체적인 것은 나중에 만든다.  
+모든 오류 코드를 개발자가 직접 정의하고 관리하면 사용하기 힘들기 때문에 `required` 같은 메시지로 끝내고, 정말 중요한 메시지는 꼭 필요할 때 구체적으로 적어서 사용하는 방식이 더 효율적이다.  
+
+**errors.properties**
+
+```yaml
+required.item.itemName=상품 이름은 필수 입니다.
+required.java.lang.String=필수 문자입니다.
+required=필수 값 입니다.
+```
+
+`itemName`의 경우 `required` 검증 오류 메시지가 발생함녀 다음 코드 순서대로 메시지가 생성된다.
+
+1. required.item.itemName
+2. required.itemName
+3. required.java.lang.String
+4. required
+
+이렇게 생성된 메시지 코드를 기반으로 슨서대로 `MessageSource`에서 메시지를 찾는다.  
+구체적인 것을 시작으로 덜 구체적인 메시지를 찾아나선다. (1 -> 2 -> 3 -> 4)
+이렇게 되면 만약에 크게 중요하지 않은 오류 메시지는 기존에 정의된 것을 그냥 재활용하면 된다.
+
+#### ValidationUtils
+
+`ValidationUtils`을 사용하면 한줄로 파라미터 검증을 할 수 있다.  
+하지만 `Empty`, `공백` 같이 단순한 기능만을 제공한다. 아래는 같은 기능을 하는 코드다.
+
+```java
+if (!StringUtils.hasText(item.getItemName())) { 
+    bindingResult.rejectValue("itemName", "required", "기본: 상품 이름은 필수입니다."); 
+}
+```
+
+```java
+ValidationUtils.rejectIfEmptyOrWhitespace(bindingResult, "itemName", "required");
+```
+
+1. `rejectValue()` 호출한다.
+2. `MessageCodesResolver`를 사용해서 검증 오류 코드로 메시지 코드들을 생성한다.
+3. `new FieldError()`를 생성하면서 메시지 코드들을 보관한다.
+4. `thymeleaf`에서 `th:errors`를 통해 메시지 코드들로 메시지를 순서대로 찾고 화면에 표시한다.
+
+---
+
 ---
 
 **참고한 강의**:
