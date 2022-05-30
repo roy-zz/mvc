@@ -187,14 +187,106 @@ required: 필수 값 입니다.
 
 ---
 
+### 스프링의 오류 메시지 처리
 
+검증 오류 코드는 **개발자가 직접 `rejectValue()`를 호출**하는 경우와 **스프링이 검증 오류에 추가**(주로 타입 캐스팅 오류)한 경우가 있다.  
+숫자가 입력되어야 하는 필드에 문자열을 입력하면 `BindingResult`에는 개발자가 직접 입력하지 않아도 `FieldError`가 담겨있는 것을 확인할 수 있다.  
+`BindingResult`를 사용하는 경우 타입 캐스팅 시 오류가 발생하여도 컨트롤러 코드에 진입한다.  
 
+```
+codes[typeMismatch.item.price,typeMismatch.price,typeMismatch.java.lang.Integer,typeMismatch]
+```
 
+스프링은 타입 오류가 발생하면 `typeMismatch`라는 오류 코드를 사용하며 해당 오류 코드가 `MessageCodesResolver`를 통해서 아래와 같이 네 개의 메시지 코드를 생성한다.  
+  
+- typeMismatch.item.price
+- typeMismatch.price
+- typeMismatch.java.lang.Integer
+- typeMismatch
+  
+이렇게 스프링에서 자동으로 메시지 코드를 생성하기 때문에 우리는 `error.properties`와 같은 설정파일만 수정하면 코드의 수정없이 원하는 메시지를 단계별로 설정할 수 있다.  
+(`Spring Cloud`를 사용하면 애플리케이션 재실행없이 설정파일을 적용할 수 있다. 즉, 애플리케이션의 재실행없이 화면에 표시되는 문구를 바꿀수 있게 된다.)
 
+---
 
+### Validator(검증기) 분리
 
+지금까지 우리가 작성한 코드는 검증을 위한 코드가 컨트롤러 코드의 대부분을 차지하면서 가독성을 떨어뜨렸다.  
+이는 `AOP`적인 관점에서 보았을 때 좋지 못한 방식이므로 검증을 위한 기능을 별도의 클래스로 역할을 분리해본다.
+  
+1. `Item` 엔티티를 검증하는 `ItemValidator` 클래스를 생성한다.
+  
+**ItemValidator**
+```java
+@Component
+public class ItemValidator implements Validator {
+    @Override
+    public boolean supports(Class<?> clazz) {
+        return Item.class.isAssignableFrom(clazz);
+    }
+    @Override
+    public void validate(Object target, Errors errors) {
+        Item item = (Item) target;
+        if (!StringUtils.hasText(item.getItemName())) {
+            errors.rejectValue("itemName", "required");
+        }
+        if (item.getPrice() == null || item.getPrice() < 1000 || item.getPrice() > 1000000) {
+            errors.rejectValue("price", "range", new Object[]{1000, 10000000}, null);
+        }
+        if (item.getQuantity() == null || item.getQuantity() >= 9999) {
+            errors.rejectValue("quantity", "max", new Object[]{9999}, null);
+        }
 
+        if (item.getPrice() != null && item.getQuantity() != null) {
+            int resultPrice = item.getPrice() * item.getQuantity();
+            if (resultPrice < 10000) {
+                errors.reject("totalPriceMin", new Object[]{10000, resultPrice}, null);
+            }
+        }
+    }
+}
+```
 
+우리가 작성한 `ItemValidator` 클래스는 스프링의 `Validator` 인터페이스를 구현하고 있기 때문에 스프링에서 체계적인 검증이 가능해진다.
+  
+`support()` 메서드는 `isAssignableFrom()` 메서드를 사용하여 호환되는 클래스인지 확인한다.    
+- isAssignableFrom: 특정 **Class**가 어떠한 클래스/인터페이스를 상속/구현했는지 확인한다.
+- instanceof: 특정 **Object**가 어떠한 클래스/인터페이스를 상속/구현했는지 확인한다.
+  
+`validate()` 메서드는 실제로 우리가 필요로하는 검증 로직을 구현하고 있다.  
+  
+2. `WebDataBinder` 연동
+  
+스프링의 `@InitBinder` 애노테이션을 사용하여 `WebDataBinder`를 통해 해당 컨트롤러에 `Validator`(검증기)를 자동으로 적용할 수 있다.  
+`@InitBinder`를 통한 적용 방법은 해당 컨트롤러에만 적용된다.
+
+```java
+@InitBinder
+public void init(WebDataBinder dataBinder) {
+    dataBinder.addValidators(itemValidator);
+}
+```
+
+3. `@Validated` 애노테이션 추가
+
+```java
+@PostMapping("/add")
+public String addItemV6(
+    @Validated @ModelAttribute Item item, 
+    BindingResult bindingResult, 
+    RedirectAttributes redirectAttributes, 
+    Model model) {
+    // ...
+}
+```
+
+`@Validated` 애노테이션을 우리가 검증하려는 대상에 붙여주면 `WebDataBinder`에 등록된 검증기를 찾아서 실행한다.  
+여러 검증기가 등록되어 있다면 우리가 1단계에서 작성한 `support()` 메서드를 통해서 어떠한 검증기가 실행되야 하는지 확인한다.  
+(마치 `DispatcherServlet`의 프론트 컨트롤러 패턴과 유사하게 동작)
+  
+우리는 대상을 검증하기 위해 대상에게 `@Validated`를 붙여주었다.  
+`@Validated`이외에 `@Valid`라는 애노테이션도 사용이 가능하며 동일하게 동작한다.  
+`@Validated`의 경우 스프링 전용 검증 애노테이션이고 `@Valid`는 자바 표준 검증 애노테이션이다.
 
 ---
 
