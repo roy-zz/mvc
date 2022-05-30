@@ -1,24 +1,26 @@
 package hello.itemservice.domain.item;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import lombok.Data;
 import org.hibernate.validator.constraints.Range;
 
 @Data
-// @ScriptAssert(lang = "javascript", script = "_this.price * _this.quantity >= 10000")
 public class Item {
 
-//    @NotNull(groups = UpdateCheck.class) //수정 요구사항 추가
+    @NotNull(groups = UpdateValidationGroup.class)
     private Long id;
 
-//    @NotBlank(groups = {SaveCheck.class, UpdateCheck.class})
+    @NotBlank(groups = {UpdateValidationGroup.class, SaveValidationGroup.class})
     private String itemName;
 
-//    @NotNull(groups = {SaveCheck.class, UpdateCheck.class})
-    @Range(min = 1000, max = 1_000_000, groups = {SaveCheck.class, UpdateCheck.class})
+    @NotNull(groups = {SaveValidationGroup.class, UpdateValidationGroup.class})
+    @Range(min = 1000, max = 1_000_000, groups = {SaveValidationGroup.class, UpdateValidationGroup.class})
     private Integer price;
 
-//    @NotNull(groups = {SaveCheck.class, UpdateCheck.class})
-//    @Max(value = 9999, groups = {SaveCheck.class})
+    @NotNull(groups = {SaveValidationGroup.class, UpdateValidationGroup.class})
+    @Max(value = 9999, groups = {SaveValidationGroup.class})
     private Integer quantity;
 
     public Item() {
@@ -29,4 +31,7 @@ public class Item {
         this.price = price;
         this.quantity = quantity;
     }
+
+    public interface SaveValidationGroup {}
+    public interface UpdateValidationGroup {}
 }

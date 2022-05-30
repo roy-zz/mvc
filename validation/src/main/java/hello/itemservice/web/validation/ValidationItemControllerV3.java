@@ -1,20 +1,22 @@
 package hello.itemservice.web.validation;
 
 import hello.itemservice.domain.item.Item;
+import hello.itemservice.domain.item.Item.SaveValidationGroup;
+import hello.itemservice.domain.item.Item.UpdateValidationGroup;
 import hello.itemservice.domain.item.ItemRepository;
-import hello.itemservice.domain.item.SaveCheck;
-import hello.itemservice.domain.item.UpdateCheck;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import javax.validation.Valid;
-import java.util.List;
 
 @Slf4j
 @Controller
@@ -69,7 +71,7 @@ public class ValidationItemControllerV3 {
     }
 
     @PostMapping("/add")
-    public String addItem2(@Validated(SaveCheck.class) @ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
+    public String addItem2(@Validated(SaveValidationGroup.class) @ModelAttribute Item item, BindingResult bindingResult, RedirectAttributes redirectAttributes) {
 
         //특정 필드가 아닌 복합 룰 검증
         if (item.getPrice() != null && item.getQuantity() != null) {
@@ -120,7 +122,7 @@ public class ValidationItemControllerV3 {
     }
 
     @PostMapping("/{itemId}/edit")
-    public String editV2(@PathVariable Long itemId, @Validated(UpdateCheck.class) @ModelAttribute Item item, BindingResult bindingResult) {
+    public String editV2(@PathVariable Long itemId, @Validated(UpdateValidationGroup.class) @ModelAttribute Item item, BindingResult bindingResult) {
 
         //특정 필드가 아닌 복합 룰 검증
         if (item.getPrice() != null && item.getQuantity() != null) {
