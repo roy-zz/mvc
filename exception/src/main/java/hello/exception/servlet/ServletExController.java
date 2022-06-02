@@ -1,19 +1,18 @@
 package hello.exception.servlet;
 
+import java.io.IOException;
+import javax.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 
 @Slf4j
 @Controller
 public class ServletExController {
 
-    @GetMapping("/error-ex")
-    public void errorEx() {
-        throw new RuntimeException("예외 발생!");
+    @GetMapping("/cause-exception")
+    public void causeException() {
+        throw new RuntimeException("강제로 발생시킨 예외");
     }
 
     @GetMapping("/error-404")
