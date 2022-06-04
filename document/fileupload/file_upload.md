@@ -142,16 +142,46 @@ body = �PNG...
 
 ### 스프링의 파일 업로드
 
+스프링의 `MultipartFile` 기능을 사용하면 서블릿을 통한 파일 업로드보다 편하게 개발할 수 있다.  
+물론 스프링의 `MultipartFile`도 자체적으로 파일을 업로드 하는 것이 아니라 서블릿 기능을 사용하기 쉽게 해주어 개발 생산성을 높인 것이다.  
 
+```java
+@Slf4j
+@Controller
+@RequestMapping("/spring")
+public class SpringUploadController {
+    @Value("${file.dir}")
+    private String fileDir;
+    // ...
+    @PostMapping("/upload")
+    public String saveFile(@RequestParam String itemName, 
+                           @RequestParam MultipartFile file, 
+                           HttpServletRequest request) throws IOException {
+        if (!file.isEmpty()) {
+            String fullPath = String.format("%s%s", fileDir, file.getOriginalFilename());
+            log.info("fullPath = {}", fullPath);
+            file.transferTo(new File(fullPath));
+        }
+        return "upload-form";
+    }
+}
+```
 
+서블릿의 파일 업로드 기능과 비교해보면 코드가 상당히 간략해진 것을 알 수 있다.
 
+---
 
+### 파일 업로드 참고
 
+실무에서 파일 업로드를 구현하기 위해서 참고할만한 사항들을 정리해본다.
 
-
-
-
-
+- 클라이언트가 전달한 파일명(이하 A)과 서버에서 생성한 파일명(이하 B) 모두 서버에 저장하고 있어야 한다.  
+  `A`는 추후 파일을 클라이언트에게 제공할 때 사용해야 하며 `B`는 중복되는 파일명이 발생하지 않게 하기 위해서 서버에서 관리해야 한다.  
+  일반적으로 중복되지 않는 파일명을 만들기 위해 `UUID`를 사용한다.
+- MultipartFile(멀티파트)는 `@ModelAttribute`에서 사용할 수 있다.
+- 클라이언트가 브라우저를 통해 파일에 접근하면 일반적으로 파일이 다운로드 되는 것이 아니라 브라우저를 통해 열리게 된다.  
+  만약 다운로드 되도록 구현하고 싶다면 `Content-Disposition` 헤더에 `attachment; filename="업로드 파일명"`값을 추가해야 한다.
+- 다중 파일을 업로드 하기 위해서는 `input` 태그에 `multiple="multiple"` 속성을 활성화 해야 한다.
 
 ---
 
